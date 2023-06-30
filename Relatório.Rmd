@@ -1,0 +1,159 @@
+---
+title: "Relatório de pesquisa"
+subtitle: "EIXO 4"
+author:
+  - Antonia Xavier, ENCE
+  - Francisco Rubens, ENCE
+  - Leornardo Lima, ENCE
+  - Lucas Uchoa, ENCE
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = F)
+```
+
+```{r, warning=F, message=F}
+library(tidyverse)
+```
+
+# Relatório
+
+```{r}
+dados <- read.csv2("base_semi_limpa.csv", header=T)
+dados <- dados[,-1]
+```
+
+
+## Plano de Crítica
+
+
+```{r}
+
+```
+
+
+## Tabulação
+```{r}
+attach(dados)
+```
+
+```{r}
+tabular <- function(v) {
+  t <- table(v)
+  t <- cbind(t,paste0(round(t/length(v)*100,2), "%"))
+  t <- rbind(t, c(sum(as.numeric(t[,1])), "100%"))
+  colnames(t) <- c("Frequência", "Porcentagem")
+  rownames(t)[dim(t)[1]] <- "Total"
+  knitr::kable(t)
+}
+```
+
+
+### Idade
+```{r}
+
+summary(idade)
+hist(idade)
+faixa_etaria <- case_when(
+  idade <= 24 ~ "18 a 24 anos",
+  idade <= 34 ~ "25 a 34 anos",
+  idade <= 44 ~ "35 a 44 anos",
+  idade <= 54 ~ "45 a 54 anos",
+  idade <= 64 ~ "55 a 64 anos",
+  .default = "65 anos ou mais"
+)
+
+#knitr::kable(table(faixa_etaria))
+tabular(faixa_etaria)
+```
+
+### Sexo
+
+```{r}
+#knitr::kable(table(sexo))
+tabular(sexo)
+```
+
+### Cor ou Raça
+
+```{r}
+#knitr::kable(table(cor))
+tabular(cor)
+```
+
+### Estado Civil
+
+```{r}
+#knitr::kable(table(civil))
+tabular(civil)
+```
+
+### Grau de instrução
+
+```{r}
+#knitr::kable(table(instrucao)
+tabular(instrucao)
+```
+
+### Unidade Federativa
+
+```{r}
+#knitr::kable(table(uf))
+tabular(uf)
+```
+
+### Município
+
+```{r}
+#knitr::kable(table(municipio))
+tabular(municipio)
+```
+
+### Área
+
+```{r}
+#knitr::kable(table(area))
+tabular(area)
+```
+
+### Número de moradores do domicílio  
+
+```{r}
+summary(num_moradores)
+
+hist(num_moradores)
+
+#knitr::kable(table(num_moradores))
+tabular(num_moradores)
+```
+
+### Situação de trabalho  
+
+```{r}
+#knitr::kable(table(sit_trabalho))
+tabular(sit_trabalho)
+```
+
+### Forma de renda  
+
+```{r}
+formas_renda <- str_split(forma_renda, ";") %>% unlist
+formas_renda <- formas_renda[formas_renda != ""]
+#knitr::kable(table(formas_renda))
+tabular(formas_renda)
+```
+
+### Renda
+
+```{r}
+renda[renda == ""] <- "Não informado"
+#knitr::kable(table(renda))
+tabular(renda)
+```
+
+
+
+
+
+
