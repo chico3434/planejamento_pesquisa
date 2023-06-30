@@ -1,8 +1,11 @@
+library(tidyverse)
+
 dados <- readxl::read_xlsx("Inclusão e Educação Financeira(1-216).xlsx")
 dados <- dados[,-(1:6)]
 colnames(dados)
 
 dados <- dados %>% replace(is.na(.), "")
+dados$forma_renda <- apply(dados[,11:12], 1, paste, collapse = "")
 dados$invest <- apply(dados[,22:23], 1, paste, collapse = "")
 dados$razao_poupa <- apply(dados[,c(24,33)], 1, paste, collapse = "")
 dados$razao_npoupa <- apply(dados[,c(30,36)], 1, paste, collapse = "")
@@ -34,7 +37,7 @@ dados <- dados %>%
   mutate(poupa=`Você guarda dinheiro na poupança?`) %>% 
   mutate(tipos_invest=`Quais dos investimentos abaixo você faz?`) %>% 
   mutate(reserva=`Se tivesse que usar sua reserva financeira de emergência a partir de hoje, quanto tempo ela duraria?`) %>% 
-  select(idade, sexo, cor, civil, instrucao, uf, municipio, area, num_moradores, sit_trabalho,
+  select(idade, sexo, cor, civil, instrucao, uf, municipio, area, num_moradores, sit_trabalho, forma_renda,
          renda, forma_pag, cartao, cb, razao_cb, razao_ncb, uso_cb, tempo_cb, poupa, invest, razao_poupa, razao_npoupa, razao_invest, razao_ninvest, valor_poupa, valor_invest, perfil_invest, tipos_invest,
          reserva)
 
