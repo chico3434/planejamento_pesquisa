@@ -1,13 +1,15 @@
-# LEITURA DOS DADOS
+## LEITURA DOS DADOS
+
 library(tidyverse)
 dados <- readxl::read_xlsx("Inclusão e Educação Financeira(1-216).xlsx")
 dados <- dados[,-(1:6)]
 colnames(dados)
 
 
-# LIMPEZA DOS DADOS
 
+## LIMPEZA DOS DADOS
 
+# junção de perguntas iguais
 dados <- dados %>% replace(is.na(.), "")
 dados$forma_renda <- apply(dados[,11:12], 1, paste, collapse = "")
 dados$invest <- apply(dados[,22:23], 1, paste, collapse = "")
@@ -19,6 +21,7 @@ dados$valor_poupa <- apply(dados[,c(26,35)], 1, paste, collapse = "")
 dados$valor_invest <- apply(dados[,c(28,32)], 1, paste, collapse = "")
 dados$perfil_invest <- apply(dados[,c(27,31)], 1, paste, collapse = "")
 
+# transformação de variáveis
 dados <- dados %>%
   mutate(idade=as.integer(`Qual a sua idade?`)) %>% 
   mutate(sexo=`Qual o seu sexo?`) %>% 
@@ -45,10 +48,15 @@ dados <- dados %>%
          renda, forma_pag, cartao, cb, razao_cb, razao_ncb, uso_cb, tempo_cb, poupa, invest, razao_poupa, razao_npoupa, razao_invest, razao_ninvest, valor_poupa, valor_invest, perfil_invest, tipos_invest,
          reserva)
 
-write.csv2(dados, "base_semi_limpa.csv")
+# remoção de duplicadas
+dados <- dados[!duplicated(dados), ]
+cat('Quantidade de duplicatas:', nrow(dados[duplicated(dados), ]))
+
+# write.csv2(dados, "base_semi_limpa.csv")
 
 
-# PLANO DE CRÍTICA
+
+## PLANO DE CRÍTICA
 
 dados <- dados %>%
   # ajuste de strings
@@ -59,36 +67,46 @@ dados <- dados %>%
          municipio = recode(municipio, 'sp' = 'sao paulo'),
   ) %>%
   # plano de crítica
-  mutate(idade = ifelse(idade >= 120, NA, idade),
-         num_moradores = ifelse(num_moradores >= 25, NA, num_moradores),
+  mutate(idade = ifelse(idade >= 120, 'ignorado', idade),
+         num_moradores = ifelse(num_moradores >= 25, 'ignorado', num_moradores),
          sit_trabalho = ifelse(renda == 'Sem trabalho remunerado' &
                                  forma_renda == 'Não recebo rendimentos' &
                                  renda != 'Até R$ 660,00',
-                               NA, renda),
+                               'ignorado', renda),
          sit_trabalho = ifelse(sit_trabalho == 'Estagiário' &
                                  renda %in% c('De R$ 6.600,01 a R$ 13.200,00', 'De R$ 660,01 a R$ 1.320,00', 'Mais de R$ 13.200,01'),
-                               NA, sit_trabalho),
+                               'ignorado', sit_trabalho),
          sit_trabalho = ifelse(sit_trabalho == 'Empregado do setor privado, com carteira assinada' &
                                  renda == 'Até R$ 660,00',
-                               NA, sit_trabalho),
+                               'ignorado', sit_trabalho),
          forma_renda = ifelse(forma_renda == 'Não recebo rendimentos além do trabalho' &
                                 renda != 'Até R$ 660,00',
-                              NA, forma_renda),
+                              'ignorado', forma_renda),
          razao_ncb = ifelse(razao_ncb == 'Não tenho dinheiro' &
                               renda %in% c('De R$ 6.600,01 a R$ 13.200,00', 'De R$ 660,01 a R$ 1.320,00', 'Mais de R$ 13.200,01'),
-                            NA, razao_ncb),
+                            'ignorado', razao_ncb),
          forma_pag = ifelse(forma_pag == 'Pix' &
                               cb == 'Não',
-                            NA, forma_pag),
-         tipos_invest = ifelse(tipos_invest = 'Não faço investimentos' &
-                                 invest = 'Sim',
-                         NA, tipos_invest))
+                            'ignorado', forma_pag),
+         tipos_invest = ifelse(tipos_invest == 'Não faço investimentos' &
+                                 invest == 'Sim',
+                         'ignorado', tipos_invest))
 
-write.csv2(dados, "base_limpa.csv")
+cat('Quantidade de imputações:',
+    dados %>%
+      filter(idade == 'ignorado' | num_moradores == 'ignorado' |
+           sit_trabalho == 'ignorado' | forma_renda == 'ignorado' |
+           razao_ncb == 'ignorado' | forma_pag == 'ignorado' |
+           tipos_invest  == 'ignorado') %>%
+      count() %>%
+      unlist()
+)
+
+# write.csv2(dados, "base_limpa.csv")
 
 
-
-
-
+# FALTA FAZER
+## revisar fluxo de questionário e conferir respostas ignoradas
+## verificar casos suspeitos
 
 

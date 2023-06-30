@@ -18,3 +18,10 @@ PLANO DE CRÍTICA
 & Possui conta bancária = "não"
 [22, 23, 38] Você faz investimento financeiro?
   & Quais dos investimentos abaixo você faz? = Não faço investimentos
+  
+  
+  
+CASOS SUSPEITOS
+- Uma pessoa indígena, 27 anos, divorciada, que mora no município do Rio de Janeiro porém em área Rural, mora com 7 pessoas, possui mais de 250 mil na poupança e entre 50 e 100 mil em investimento
+- Pessoa de 23 anos, renda de R$ 6.600,01 a R$ 13.200,00, empregado do setor privado com carteira assinada, não possui conta bancária porque não tem interesse. Faz investimento comprando moedas financeiras.
+- Pessoa de 18 anos casada que recebe aposentadoria e trabalha no setor privado com carteira assinada. 
