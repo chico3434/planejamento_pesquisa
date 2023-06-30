@@ -1,0 +1,20 @@
+PLANO DE CRÍTICA
+
+[1] Se Idade >= 120
+#### [6, 7] Se munícipio não existir no estado
+[9] Se Número de pessoas no domicílio >= 25
+[10, 12, 13] Se Situação de trabalho = Sem trabalho remunerado
+& Quais das formas de renda a seguir você recebe? = Não recebo rendimentos
+& Rendimento mensal médio pessoal != até 660
+[10] Se Situação de trabalho = Estagiário
+& Rendimento mensal médio pessoal >= 6.600
+[10] Se Empregado do setor privado, com carteira assinada
+& Rendimento = até 660
+[11] Se Além da renda de trabalho, quais das formas de renda a seguir você recebe? = Não recebo rendimentos além do trabalho
+& Rendimento mensal médio pessoal != até 660
+[18] Se Motivo para não possuir conta bancária = Não tenho dinheiro
+& Renda >= 6.600
+[14, 16] Se forma de pagamento que mais utiliza = PIX
+& Possui conta bancária = "não"
+[22, 23, 38] Você faz investimento financeiro?
+  & Quais dos investimentos abaixo você faz? = Não faço investimentos
