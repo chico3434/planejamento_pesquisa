@@ -40,6 +40,7 @@ attach(dados)
 
 ```{r}
 tabular <- function(v) {
+  v[v==""] <- NA
   t <- table(v)
   t <- cbind(t,paste0(round(t/length(v)*100,2), "%"))
   t <- rbind(t, c(sum(as.numeric(t[,1])), "100%"))
@@ -152,8 +153,120 @@ renda[renda == ""] <- "Não informado"
 tabular(renda)
 ```
 
+### Forma de pagamento mais utilizada  
+
+```{r}
+tabular(forma_pag)
+```
 
 
+### Possui cartão no nome  
+
+```{r}
+tabular(cartao)
+```
+
+### Se possui conta bancária  
+
+```{r}
+tabular(cb)
+```
+
+### Razão para possuir conta bancária  
+
+```{r}
+tabular(razao_cb)
+```
 
 
+### Razão para não possuir conta bancária  
+
+```{r}
+tabular(razao_ncb)
+```
+
+### Frequência de uso da conta bancária  
+
+```{r}
+tabular(uso_cb)
+```
+
+### Tempo que usa conta bancária  
+
+```{r}
+tabular(tempo_cb)
+```
+
+
+### Se guarda dinheiro na poupança  
+
+```{r}
+tabular(poupa)
+```
+
+### Se faz investimentos financeiros  
+
+```{r}
+tabular(invest)
+```
+
+### Razão para guardar dinheiro na poupança  
+
+```{r}
+tabular(razao_poupa)
+```
+
+
+### Razão para não guardar dinheiro na poupança  
+
+```{r}
+tabular(razao_npoupa)
+```
+
+
+### Razão para fazer investimento financeiro  
+
+```{r}
+tabular(razao_invest)
+```
+
+
+### Razão para não fazer investimento financeiro  
+
+```{r}
+tabular(razao_ninvest)
+```
+
+
+### Valor guardado na poupança  
+
+```{r}
+tabular(valor_poupa)
+```
+
+### Valor aplicado em investimentos financeiros  
+
+```{r}
+tabular(valor_invest)
+```
+
+### Perfil de investidor  
+
+```{r}
+tabular(perfil_invest)
+```
+
+### Tipos de investimentos  
+
+```{r}
+tipos_invest_splitted <- str_split(tipos_invest, ";") %>% unlist
+tipos_invest_splitted <- tipos_invest_splitted[tipos_invest_splitted != ""]
+tabular(tipos_invest_splitted)
+```
+
+### Reserva de emergência  
+
+```{r}
+tabular(reserva)
+```
 
