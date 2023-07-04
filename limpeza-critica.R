@@ -1,13 +1,64 @@
+## PACOTES E FUNÇÕES NECESSÁRIAS
+library(tidyverse)
+rm_accent <- function(str,pattern="all") {
+  if(!is.character(str))
+    str <- as.character(str)
+  pattern <- unique(pattern)
+  if(any(pattern=="Ç"))
+    pattern[pattern=="Ç"] <- "ç"
+  symbols <- c(
+    acute = "áéíóúÁÉÍÓÚýÝ",
+    grave = "àèìòùÀÈÌÒÙ",
+    circunflex = "âêîôûÂÊÎÔÛ",
+    tilde = "ãõÃÕñÑ",
+    umlaut = "äëïöüÄËÏÖÜÿ",
+    cedil = "çÇ"
+  )
+  nudeSymbols <- c(
+    acute = "aeiouAEIOUyY",
+    grave = "aeiouAEIOU",
+    circunflex = "aeiouAEIOU",
+    tilde = "aoAOnN",
+    umlaut = "aeiouAEIOUy",
+    cedil = "cC"
+  )
+  accentTypes <- c("´","`","^","~","¨","ç")
+  if(any(c("all","al","a","todos","t","to","tod","todo")%in%pattern)) # opcao retirar todos
+    return(chartr(paste(symbols, collapse=""), paste(nudeSymbols, collapse=""), str))
+  for(i in which(accentTypes%in%pattern))
+    str <- chartr(symbols[i],nudeSymbols[i], str)
+  return(str)
+}
+
+
+
 ## LEITURA DOS DADOS
 
-library(tidyverse)
-dados <- readxl::read_xlsx("Inclusão e Educação Financeira(1-216).xlsx")
-dados <- dados[,-(1:6)]
+data <- readxl::read_xlsx("Inclusão e Educação Financeira(1-216).xlsx")
+dados <- data[,-(1:6)]
 colnames(dados)
 
 
 
 ## LIMPEZA DOS DADOS
+
+# fluxo de questionário
+for(i in c(13,14,15,16,18,19,20,38,39)) {
+  dados[,i] <- dados %>% select(i) %>% mutate_all(coalesce, 'Não informado')
+}
+
+for (i in nrow(dados)) {
+  if (dados[i,21] == 'Sim' & dados[i,22] == 'Sim') {
+    dados[i,26] <- ifelse(is.na(dados[i,26]), 'Não informado', dados[i,26])
+    dados[i,28] <- ifelse(is.na(dados[i,28]), 'Não informado', dados[i,28])
+  }
+  if (dados[i,21] == 'Não' & dados[i,22] == 'Sim') {
+    dados[i,32] <- ifelse(is.na(dados[i,32]), 'Não informado', dados[i,32])
+  }
+  if (dados[i,21] == 'Sim' & dados[i,22] == 'Não') {
+    dados[i,35] <- ifelse(is.na(dados[i,35]), 'Não informado', dados[i,35])
+  }
+}
 
 # junção de perguntas iguais
 dados <- dados %>% replace(is.na(.), "")
@@ -29,7 +80,7 @@ dados <- dados %>%
   mutate(civil=`Qual o seu estado civil?`) %>% 
   mutate(instrucao=`Qual o seu grau de instrução atual?`) %>% 
   mutate(uf=`Em que estado você reside?`) %>% 
-  mutate(municipio=`Em que município você reside?`) %>% 
+  mutate(municipio=tolower(rm_accent(`Em que município você reside?`))) %>% 
   mutate(area=`Qual situação melhor descreve o local onde você reside?`) %>% 
   mutate(num_moradores=dados[,9] %>% unlist() %>% as.integer()) %>% 
   mutate(sit_trabalho=`Qual a sua situação de trabalho atual?`) %>%
@@ -48,10 +99,6 @@ dados <- dados %>%
          renda, forma_pag, cartao, cb, razao_cb, razao_ncb, uso_cb, tempo_cb, poupa, invest, razao_poupa, razao_npoupa, razao_invest, razao_ninvest, valor_poupa, valor_invest, perfil_invest, tipos_invest,
          reserva)
 
-# remoção de duplicadas
-dados <- dados[!duplicated(dados), ]
-cat('Quantidade de duplicatas:', nrow(dados[duplicated(dados), ]))
-
 # write.csv2(dados, "base_semi_limpa.csv")
 
 
@@ -61,52 +108,51 @@ cat('Quantidade de duplicatas:', nrow(dados[duplicated(dados), ]))
 dados <- dados %>%
   # ajuste de strings
   mutate(municipio = recode(municipio, 'rio de janeiri' = 'rio de janeiro'),
+         municipio = recode(municipio, 'río de janeiro' = 'rio de janeiro'),
          municipio = recode(municipio, 'rio' = 'rio de janeiro'),
          municipio = recode(municipio, 'rj' = 'rio de janeiro'),
+         municipio = recode(municipio, 'río de janeiro' = 'rio de janeiro'),
          municipio = recode(municipio, 'guapimirin' = 'guapimirim'),
          municipio = recode(municipio, 'sp' = 'sao paulo'),
   ) %>%
   # plano de crítica
-  mutate(idade = ifelse(idade >= 120, 'ignorado', idade),
-         num_moradores = ifelse(num_moradores >= 25, 'ignorado', num_moradores),
+  mutate(idade = ifelse(idade >= 120, 'Não informado', idade),
+         num_moradores = ifelse(num_moradores >= 25, 'Não informado', num_moradores),
          sit_trabalho = ifelse(renda == 'Sem trabalho remunerado' &
                                  forma_renda == 'Não recebo rendimentos' &
                                  renda != 'Até R$ 660,00',
-                               'ignorado', renda),
+                               'Não informado', sit_trabalho),
          sit_trabalho = ifelse(sit_trabalho == 'Estagiário' &
                                  renda %in% c('De R$ 6.600,01 a R$ 13.200,00', 'De R$ 660,01 a R$ 1.320,00', 'Mais de R$ 13.200,01'),
-                               'ignorado', sit_trabalho),
+                               'Não informado', sit_trabalho),
          sit_trabalho = ifelse(sit_trabalho == 'Empregado do setor privado, com carteira assinada' &
                                  renda == 'Até R$ 660,00',
-                               'ignorado', sit_trabalho),
+                               'Não informado', sit_trabalho),
          forma_renda = ifelse(forma_renda == 'Não recebo rendimentos além do trabalho' &
                                 renda != 'Até R$ 660,00',
-                              'ignorado', forma_renda),
+                              'Não informado', forma_renda),
          razao_ncb = ifelse(razao_ncb == 'Não tenho dinheiro' &
                               renda %in% c('De R$ 6.600,01 a R$ 13.200,00', 'De R$ 660,01 a R$ 1.320,00', 'Mais de R$ 13.200,01'),
-                            'ignorado', razao_ncb),
+                            'Não informado', razao_ncb),
          forma_pag = ifelse(forma_pag == 'Pix' &
                               cb == 'Não',
-                            'ignorado', forma_pag),
+                            'Não informado', forma_pag),
          tipos_invest = ifelse(tipos_invest == 'Não faço investimentos' &
                                  invest == 'Sim',
-                         'ignorado', tipos_invest))
+                               'Não informado', tipos_invest),
+         municipio = ifelse(municipio == 'canpinas' &
+                              uf != 'São Paulo (SP)',
+                            'Não informado', municipio),
+         tipos_invest = ifelse(tipos_invest == 'criptomoedas',
+                               'Criptomoedas', tipos_invest))
 
-cat('Quantidade de imputações:',
-    dados %>%
-      filter(idade == 'ignorado' | num_moradores == 'ignorado' |
-           sit_trabalho == 'ignorado' | forma_renda == 'ignorado' |
-           razao_ncb == 'ignorado' | forma_pag == 'ignorado' |
-           tipos_invest  == 'ignorado') %>%
-      count() %>%
-      unlist()
-)
+# remoção de duplicadas
+cat('Quantidade de duplicatas:', nrow(dados[duplicated(dados), ]))
+dados <- dados[!duplicated(dados),]
+
+# remoção de casos suspeitos
+dados[23,]
+dados <- dados[-23,]
 
 # write.csv2(dados, "base_limpa.csv")
-
-
-# FALTA FAZER
-## revisar fluxo de questionário e conferir respostas ignoradas
-## verificar casos suspeitos
-
 
