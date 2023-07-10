@@ -1,0 +1,866 @@
+---
+title: "Plano Tabular"
+author: "Francisco Rubens"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = F)
+```
+
+```{r, warning=F, message=F}
+library(tidyverse)
+options(OutDec = ",")
+```
+
+```{r}
+dados <- read.csv2("base_limpa.csv", header=T)
+dados <- dados[,-1]
+```
+
+
+# Tabulação
+```{r}
+attach(dados)
+```
+
+```{r}
+tabular <- function(v, acum=F, order=F) {
+  v[v==""] <- NA
+  t <- table(v)
+  if(acum) {
+    df <- data.frame(
+      Frequência=t,
+      Porcentagem=paste0(round(t/length(v)*100,2), "%"),
+      order=order
+    )
+    rownames(df) <- df[,1]
+    df <- df %>% arrange(order)
+    df <- df[,-c(1,4)]
+    df <- df %>% mutate(`Frequência Acumulada`=cumsum(Frequência.Freq),
+                    `Porcentagem Acumulada`=paste0(round(cumsum(Frequência.Freq)/length(v)*100,2), "%"))
+    df <- df %>% rbind(c(sum(as.numeric(t)), "100%", sum(as.numeric(t)), "100%"))
+    colnames(df) <- c("Frequência", "Porcentagem", "Frequência acumulada", "Porcentagem acumulada")
+  } else {
+    df <- data.frame(
+      Frequência=t,
+      Porcentagem=paste0(round(t/length(v)*100,2), "%")
+    )
+    rownames(df) <- df[,1]
+    df <- df[,-1]
+    df <- df %>% rbind(c(sum(as.numeric(t)), "100%"))
+    colnames(df) <- c("Frequência", "Porcentagem")
+  }
+  rownames(df)[dim(df)[1]] <- "Total"
+  knitr::kable(df)
+}
+
+tabular.cruzado <- function(l, c) {
+t <- table(l,c, exclude = "")
+
+pt <- round(prop.table(t)*100,2)
+
+tbl <- NULL
+for(i in 1:dim(t)[2]) {
+  tbl <- cbind(tbl,t[,i])
+  tbl <- cbind(tbl,pt[,i])
+}
+
+# Adicionar totais
+tbl <- rbind(tbl,apply(tbl,2,sum))
+tbl <- cbind(tbl,c(apply(t,1,sum), sum(t)))
+
+df <- data.frame(tbl)
+
+cnames <- NULL
+for(i in 1:dim(t)[2]) {
+  cnames <- c(cnames, colnames(t)[i])
+  cnames <- c(cnames, paste0(colnames(t)[i], " (%)"))
+}
+cnames <- c(cnames, "Total")
+colnames(df) <- cnames
+rownames(df)[dim(df)[1]] <- "Total"
+knitr::kable(df)
+}
+```
+
+## Perfil  
+
+### Idade
+```{r}
+
+summary(idade)
+hist(idade)
+faixa_etaria <- case_when(
+  idade <= 24 ~ "18 a 24 anos",
+  idade <= 34 ~ "25 a 34 anos",
+  idade <= 44 ~ "35 a 44 anos",
+  idade <= 54 ~ "45 a 54 anos",
+  idade <= 64 ~ "55 a 64 anos",
+  .default = "65 anos ou mais"
+)
+
+#knitr::kable(table(faixa_etaria))
+tabular(faixa_etaria, acum = T)
+```
+
+### Sexo
+
+```{r}
+#knitr::kable(table(sexo))
+tabular(sexo)
+```
+
+### Cor ou Raça
+
+```{r}
+#knitr::kable(table(cor))
+tabular(cor)
+```
+
+### Estado Civil
+
+```{r}
+#knitr::kable(table(civil))
+tabular(civil)
+```
+
+### Grau de instrução
+
+```{r}
+#knitr::kable(table(instrucao)
+tabular(instrucao, acum = T, order=c(2,1,6,5,4,3,8,7))
+```
+
+### Unidade Federativa
+
+```{r}
+#knitr::kable(table(uf))
+tabular(uf)
+```
+
+### Município
+
+```{r}
+#knitr::kable(table(municipio))
+tabular(municipio)
+```
+
+### Área
+
+```{r}
+#knitr::kable(table(area))
+tabular(area)
+```
+
+### Número de moradores do domicílio  
+
+```{r}
+summary(num_moradores)
+
+hist(num_moradores)
+
+#knitr::kable(table(num_moradores))
+tabular(num_moradores, acum = T)
+```
+
+### Situação de trabalho  
+
+```{r}
+#knitr::kable(table(sit_trabalho))
+tabular(sit_trabalho)
+```
+
+### Forma de renda  
+
+```{r}
+formas_renda <- str_split(forma_renda, ";") %>% unlist
+formas_renda <- formas_renda[formas_renda != ""]
+#knitr::kable(table(formas_renda))
+tabular(formas_renda)
+```
+
+### Renda
+
+```{r}
+renda[renda == ""] <- "Não informado"
+#knitr::kable(table(renda))
+tabular(renda, acum = T, order=c(1,3,4,5,1,6,7))
+```
+
+## Eixo 1
+
+### Forma de pagamento mais utilizada  
+
+```{r}
+tabular(forma_pag)
+```
+
+
+### Possui cartão no nome  
+
+```{r}
+tabular(cartao)
+```
+
+### Se possui conta bancária  
+
+```{r}
+tabular(cb)
+```
+
+### Razão para possuir conta bancária  
+
+```{r}
+tabular(razao_cb)
+```
+
+
+### Razão para não possuir conta bancária  
+
+```{r}
+tabular(razao_ncb)
+```
+
+### Frequência de uso da conta bancária  
+
+```{r}
+tabular(uso_cb)
+```
+
+### Tempo que usa conta bancária  
+
+```{r}
+tabular(tempo_cb)
+```
+
+## Eixo 4  
+
+### Se guarda dinheiro na poupança  
+
+```{r}
+tabular(poupa)
+```
+
+### Se faz investimentos financeiros  
+
+```{r}
+tabular(invest)
+```
+
+### Razão para guardar dinheiro na poupança  
+
+```{r}
+tabular(razao_poupa)
+```
+
+
+### Razão para não guardar dinheiro na poupança  
+
+```{r}
+tabular(razao_npoupa)
+```
+
+
+### Razão para fazer investimento financeiro  
+
+```{r}
+tabular(razao_invest)
+```
+
+
+### Razão para não fazer investimento financeiro  
+
+```{r}
+tabular(razao_ninvest)
+```
+
+
+### Valor guardado na poupança  
+
+```{r}
+tabular(valor_poupa, acum = T, order = c(2,3,4,5,1))
+```
+
+### Valor aplicado em investimentos financeiros  
+
+```{r}
+tabular(valor_invest, acum = T, order = c(2,3,5,4,6,1))
+```
+
+### Perfil de investidor  
+
+```{r}
+tabular(perfil_invest)
+```
+
+### Tipos de investimentos  
+
+```{r}
+tipos_invest_splitted <- str_split(tipos_invest, ";") %>% unlist
+tipos_invest_splitted <- tipos_invest_splitted[tipos_invest_splitted != ""]
+tabular(tipos_invest_splitted)
+```
+
+### Reserva de emergência  
+
+```{r}
+tabular(reserva, acum = T, order = c(3,4,5,2,6,7,1))
+```
+
+## Eixo 1 x Perfil
+ 
+### Tem conta bancária x Sexo  
+
+```{r}
+tabular.cruzado(cb, sexo)
+```
+
+### Tem conta bancária x Idade  
+
+```{r}
+tabular.cruzado(cb, faixa_etaria)
+```
+
+### Tem conta bancária x Cor ou raça  
+
+```{r}
+tabular.cruzado(cb, cor)
+```
+
+### Tem conta bancária x Grau de instrução  
+
+```{r}
+tabular.cruzado(cb, instrucao)
+```
+
+### Tem conta bancária x Área  
+
+```{r}
+tabular.cruzado(cb, area)
+```
+
+### Razão para não possuir conta bancária x Sexo  
+
+```{r}
+tabular.cruzado(razao_ncb, sexo)
+```
+
+### Razão para não possuir conta bancária x Idade  
+
+```{r}
+tabular.cruzado(razao_ncb, faixa_etaria)
+```
+
+### Razão para não possuir conta bancária x Cor ou raça  
+
+```{r}
+tabular.cruzado(razao_ncb, cor)
+```
+
+### Razão para não possuir conta bancária x Grau de instrução  
+
+```{r}
+tabular.cruzado(razao_ncb, instrucao)
+```
+
+### Razão para não possuir conta bancária x Área  
+
+```{r}
+tabular.cruzado(razao_ncb, area)
+```
+
+### Razão para possuir conta bancária x Sexo  
+
+```{r}
+tabular.cruzado(razao_cb, sexo)
+```
+
+### Razão para possuir conta bancária x Idade  
+
+```{r}
+tabular.cruzado(razao_cb, faixa_etaria)
+```
+
+### Razão para possuir conta bancária x Cor ou raça  
+
+```{r}
+tabular.cruzado(razao_cb, cor)
+```
+
+### Razão para possuir conta bancária x Grau de instrução  
+
+```{r}
+tabular.cruzado(razao_cb, instrucao)
+```
+
+### Razão para possuir conta bancária x Área  
+
+```{r}
+tabular.cruzado(razao_cb, area)
+```
+
+### Frequência de uso da conta bancária x Sexo  
+
+```{r}
+tabular.cruzado(uso_cb, sexo)
+```
+
+### Frequência de uso da conta bancária x Idade  
+
+```{r}
+tabular.cruzado(uso_cb, faixa_etaria)
+```
+
+### Frequência de uso da conta bancária x Cor ou raça  
+
+```{r}
+tabular.cruzado(uso_cb, cor)
+```
+
+### Frequência de uso da conta bancária x Grau de instrução  
+
+```{r}
+tabular.cruzado(uso_cb, instrucao)
+```
+
+### Frequência de uso da conta bancária x Área  
+
+```{r}
+tabular.cruzado(uso_cb, area)
+```
+
+### Tempo de existência da conta bancária x Sexo  
+
+```{r}
+tabular.cruzado(tempo_cb, sexo)
+```
+
+### Tempo de existência da conta bancária x Idade  
+
+```{r}
+tabular.cruzado(tempo_cb, faixa_etaria)
+```
+
+### Tempo de existência da conta bancária x Cor ou raça  
+
+```{r}
+tabular.cruzado(tempo_cb, cor)
+```
+
+### Tempo de existência da conta bancária x Grau de instrução  
+
+```{r}
+tabular.cruzado(tempo_cb, instrucao)
+```
+
+### Tempo de existência da conta bancária x Área  
+
+```{r}
+tabular.cruzado(tempo_cb, area)
+```
+
+### Forma de pagamento mais utilizada x Sexo  
+
+```{r}
+tabular.cruzado(forma_pag, sexo)
+```
+
+### Forma de pagamento mais utilizada x Idade  
+
+```{r}
+tabular.cruzado(forma_pag, faixa_etaria)
+```
+
+### Forma de pagamento mais utilizada x Cor ou raça  
+
+```{r}
+tabular.cruzado(forma_pag, cor)
+```
+
+### Forma de pagamento mais utilizada x Grau de instrução  
+
+```{r}
+tabular.cruzado(forma_pag, instrucao)
+```
+
+### Forma de pagamento mais utilizada x Área  
+
+```{r}
+tabular.cruzado(forma_pag, area)
+```
+
+## Eixo 4 x Perfil
+
+### Guarda dinheiro na poupança x Sexo  
+
+```{r}
+tabular.cruzado(poupa, sexo)
+```
+
+### Guarda dinheiro na poupança x Idade  
+
+```{r}
+tabular.cruzado(poupa, faixa_etaria)
+```
+
+### Guarda dinheiro na poupança x Cor ou raça  
+
+```{r}
+tabular.cruzado(poupa, cor)
+```
+
+### Guarda dinheiro na poupança x Grau de instrução  
+
+```{r}
+tabular.cruzado(poupa, instrucao)
+```
+
+### Guarda dinheiro na poupança x Área  
+
+```{r}
+tabular.cruzado(poupa, area)
+```
+
+### Faz investimento x Sexo  
+
+```{r}
+tabular.cruzado(invest, sexo)
+```
+
+### Faz investimento x Idade  
+
+```{r}
+tabular.cruzado(invest, faixa_etaria)
+```
+
+### Faz investimento x Cor ou raça  
+
+```{r}
+tabular.cruzado(invest, cor)
+```
+
+### Faz investimento x Grau de instrução  
+
+```{r}
+tabular.cruzado(invest, instrucao)
+```
+
+### Faz investimento x Área  
+
+```{r}
+tabular.cruzado(invest, area)
+```
+
+### Razão para poupar x Sexo  
+
+```{r}
+tabular.cruzado(razao_poupa, sexo)
+```
+
+### Razão para poupar x Idade  
+
+```{r}
+tabular.cruzado(razao_poupa, faixa_etaria)
+```
+
+### Razão para poupar x Cor ou raça  
+
+```{r}
+tabular.cruzado(razao_poupa, cor)
+```
+
+### Razão para poupar x Grau de instrução  
+
+```{r}
+tabular.cruzado(razao_poupa, instrucao)
+```
+
+### Razão para poupar x Área  
+
+```{r}
+tabular.cruzado(razao_poupa, area)
+```
+
+### Razão para investir x Sexo  
+
+```{r}
+tabular.cruzado(razao_invest, sexo)
+```
+
+### Razão para investir x Idade  
+
+```{r}
+tabular.cruzado(razao_invest, faixa_etaria)
+```
+
+### Razão para investir x Cor ou raça  
+
+```{r}
+tabular.cruzado(razao_invest, cor)
+```
+
+### Razão para investir x Grau de instrução  
+
+```{r}
+tabular.cruzado(razao_invest, instrucao)
+```
+
+### Razão para investir x Área  
+
+```{r}
+tabular.cruzado(razao_invest, area)
+```
+
+
+### Razão para não poupar x Sexo  
+
+```{r}
+tabular.cruzado(razao_npoupa, sexo)
+```
+
+### Razão para não poupar x Idade  
+
+```{r}
+tabular.cruzado(razao_npoupa, faixa_etaria)
+```
+
+### Razão para não poupar x Cor ou raça  
+
+```{r}
+tabular.cruzado(razao_npoupa, cor)
+```
+
+### Razão para não poupar x Grau de instrução  
+
+```{r}
+tabular.cruzado(razao_npoupa, instrucao)
+```
+
+### Razão para não poupar x Área  
+
+```{r}
+tabular.cruzado(razao_npoupa, area)
+```
+
+### Razão para não investir x Sexo  
+
+```{r}
+tabular.cruzado(razao_ninvest, sexo)
+```
+
+### Razão para não investir x Idade  
+
+```{r}
+tabular.cruzado(razao_ninvest, faixa_etaria)
+```
+
+### Razão para não investir x Cor ou raça  
+
+```{r}
+tabular.cruzado(razao_ninvest, cor)
+```
+
+### Razão para não investir x Grau de instrução  
+
+```{r}
+tabular.cruzado(razao_ninvest, instrucao)
+```
+
+### Razão para não investir x Área  
+
+```{r}
+tabular.cruzado(razao_ninvest, area)
+```
+
+
+
+### Valor atual na poupança x Sexo  
+
+```{r}
+tabular.cruzado(valor_poupa, sexo)
+```
+
+### Valor atual na poupança x Idade  
+
+```{r}
+tabular.cruzado(valor_poupa, faixa_etaria)
+```
+
+### Valor atual na poupança x Cor ou raça  
+
+```{r}
+tabular.cruzado(valor_poupa, cor)
+```
+
+### Valor atual na poupança x Grau de instrução  
+
+```{r}
+tabular.cruzado(valor_poupa, instrucao)
+```
+
+### Valor atual na poupança x Área  
+
+```{r}
+tabular.cruzado(valor_poupa, area)
+```
+
+### Valor atual em investimentos x Sexo  
+
+```{r}
+tabular.cruzado(valor_invest, sexo)
+```
+
+### Valor atual em investimentos x Idade  
+
+```{r}
+tabular.cruzado(valor_invest, faixa_etaria)
+```
+
+### Valor atual em investimentos x Cor ou raça  
+
+```{r}
+tabular.cruzado(valor_invest, cor)
+```
+
+### Valor atual em investimentos x Grau de instrução  
+
+```{r}
+tabular.cruzado(valor_invest, instrucao)
+```
+
+### Valor atual em investimentos x Área  
+
+```{r}
+tabular.cruzado(valor_invest, area)
+```
+
+### Tempo de reserva de emergência x Sexo  
+
+```{r}
+tabular.cruzado(reserva, sexo)
+```
+
+### Tempo de reserva de emergência x Idade  
+
+```{r}
+tabular.cruzado(reserva, faixa_etaria)
+```
+
+### Tempo de reserva de emergência x Cor ou raça  
+
+```{r}
+tabular.cruzado(reserva, cor)
+```
+
+### Tempo de reserva de emergência x Grau de instrução  
+
+```{r}
+tabular.cruzado(reserva, instrucao)
+```
+
+### Tempo de reserva de emergência x Área  
+
+```{r}
+tabular.cruzado(reserva, area)
+```
+
+## Eixo 1 x Eixo 4
+
+### Possui cartão de crédito x Faz investimento  
+
+```{r}
+tabular.cruzado(cartao, invest)
+```
+
+### Forma de pagamento mais utilizada x Faz investimento  
+
+```{r}
+tabular.cruzado(forma_pag, invest)
+```
+
+### Tempo de existência da conta bancária x Faz investimento  
+
+```{r}
+tabular.cruzado(tempo_cb, invest)
+```
+
+### Razão para possuir conta bancária x Faz investimento  
+
+```{r}
+tabular.cruzado(razao_cb, invest)
+```
+
+### Possui cartão de crédito x Guarda dinheiro na poupança 
+
+```{r}
+tabular.cruzado(cartao, poupa)
+```
+
+### Forma de pagamento mais utilizada x Guarda dinheiro na poupança  
+
+```{r}
+tabular.cruzado(forma_pag, poupa)
+```
+
+### Tempo de existência da conta bancária x Guarda dinheiro na poupança  
+
+```{r}
+tabular.cruzado(tempo_cb, poupa)
+```
+
+### Razão para possuir conta bancária x Guarda dinheiro na poupança  
+
+```{r}
+tabular.cruzado(razao_cb, poupa)
+```
+
+### Possui cartão de crédito x Razão para guardar dinheiro na poupança  
+
+```{r}
+tabular.cruzado(cartao, razao_poupa)
+```
+
+### Forma de pagamento mais utilizada x Razão para guardar dinheiro na poupança  
+
+```{r}
+tabular.cruzado(forma_pag, razao_poupa)
+```
+
+### Tempo de existência da conta bancária x Razão para guardar dinheiro na poupança  
+
+```{r}
+tabular.cruzado(tempo_cb, razao_poupa)
+```
+
+### Razão para possuir conta bancária x Razão para guardar dinheiro na poupança  
+
+```{r}
+tabular.cruzado(razao_cb, razao_poupa)
+```
+
+### Possui cartão de crédito x Razão para investir  
+
+```{r}
+tabular.cruzado(cartao, razao_invest)
+```
+
+### Forma de pagamento mais utilizada x Razão para investir  
+
+```{r}
+tabular.cruzado(forma_pag, razao_invest)
+```
+
+### Tempo de existência da conta bancária x Razão para investir  
+
+```{r}
+tabular.cruzado(tempo_cb, razao_invest)
+```
+
+### Razão para possuir conta bancária x Razão para investir  
+
+```{r}
+tabular.cruzado(razao_cb, razao_invest)
+```
+
