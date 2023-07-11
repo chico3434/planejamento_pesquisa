@@ -39,8 +39,8 @@ tabular <- function(v, acum=F, order=F) {
     df <- df %>% arrange(order)
     df <- df[,-c(1,4)]
     df <- df %>% mutate(`Frequência Acumulada`=cumsum(Frequência.Freq),
-                    `Porcentagem Acumulada`=paste0(round(cumsum(Frequência.Freq)/length(v)*100,2), "%"))
-    df <- df %>% rbind(c(sum(as.numeric(t)), "100%", sum(as.numeric(t)), "100%"))
+                    `Porcentagem Acumulada`=paste0(round(cumsum(Frequência.Freq)/sum(Frequência.Freq)*100,2), "%"))
+    df <- df %>% rbind(c(sum(as.numeric(t)), "100%", sum(as.numeric(t)), paste0(round(sum(prop.table(as.numeric(t)))*100,2), "%")))
     colnames(df) <- c("Frequência", "Porcentagem", "Frequência acumulada", "Porcentagem acumulada")
   } else {
     df <- data.frame(
@@ -184,7 +184,7 @@ tabular(formas_renda)
 ### Renda
 
 ```{r}
-renda[renda == ""] <- "Não informado"
+#renda[renda == ""] <- "Não informado"
 #knitr::kable(table(renda))
 tabular(renda, acum = T, order=c(1,3,4,5,1,6,7))
 ```
