@@ -43,8 +43,19 @@ colnames(dados)
 ## LIMPEZA DOS DADOS
 
 # fluxo de questionário
-for(i in c(13,14,15,16,18,19,20,38,39)) {
+for(i in c(13,14,15,16,38,39)) {
   dados[,i] <- dados %>% select(i) %>% mutate_all(coalesce, 'Não informado')
+}
+
+for(i in nrow(dados)) {
+  if (dados[i,16] == 'Sim') {
+    dados[i,18] <- ifelse(is.na(dados[i,18]), 'Não informado', dados[i,18])
+    dados[i,19] <- ifelse(is.na(dados[i,19]), 'Não informado', dados[i,19])
+    dados[i,20] <- ifelse(is.na(dados[i,20]), 'Não informado', dados[i,20])
+  }
+  if (dados[i,16] == 'Não') {
+    dados[i,17] <- ifelse(is.na(dados[i,17]), 'Não informado', dados[i,17])
+  }
 }
 
 for (i in nrow(dados)) {
