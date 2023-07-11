@@ -165,5 +165,5 @@ dados <- dados[!duplicated(dados),]
 dados[23,]
 dados <- dados[-23,]
 
-# write.csv2(dados, "base_limpa.csv")
+write.csv2(dados, "base_limpa.csv")
 
