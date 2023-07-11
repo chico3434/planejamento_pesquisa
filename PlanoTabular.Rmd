@@ -226,13 +226,13 @@ tabular(razao_ncb)
 ### Frequência de uso da conta bancária  
 
 ```{r}
-tabular(uso_cb, acum = T, order = c(3,4,5,6,1,2))
+tabular(uso_cb, acum = T, order = c(3,4,5,1,2))
 ```
 
 ### Tempo que usa conta bancária  
 
 ```{r}
-tabular(tempo_cb, acum = T, order = c(2,5,3,4,6,1,7))
+tabular(tempo_cb, acum = T, order = c(2,5,3,4,6,1))
 ```
 
 ## Eixo 4  
