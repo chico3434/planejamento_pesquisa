@@ -2,11 +2,11 @@
 title: "Plano Tabular"
 author: "Francisco Rubens"
 date: "`r Sys.Date()`"
-output: pdf_document
+output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = F)
+knitr::opts_chunk$set(echo = F, warning = F, message=F)
 ```
 
 ```{r, warning=F, message=F}
@@ -32,7 +32,7 @@ tabular <- function(v, acum=F, order=F) {
   if(acum) {
     df <- data.frame(
       Frequência=t,
-      Porcentagem=paste0(round(t/length(v)*100,2), "%"),
+      Porcentagem=paste0(round(prop.table(t)*100,2), "%"),
       order=order
     )
     rownames(df) <- df[,1]
@@ -45,11 +45,11 @@ tabular <- function(v, acum=F, order=F) {
   } else {
     df <- data.frame(
       Frequência=t,
-      Porcentagem=paste0(round(t/length(v)*100,2), "%")
+      Porcentagem=paste0(round(prop.table(t)*100,2), "%")
     )
     rownames(df) <- df[,1]
     df <- df[,-1]
-    df <- df %>% rbind(c(sum(as.numeric(t)), "100%"))
+    df <- df %>% rbind(c(sum(as.numeric(t)), paste0(round(sum(prop.table(as.numeric(t)))*100,2), "%")))
     colnames(df) <- c("Frequência", "Porcentagem")
   }
   rownames(df)[dim(df)[1]] <- "Total"
